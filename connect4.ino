@@ -594,8 +594,8 @@ uint8_t getPlayers() {
         matrix.print(players);
         matrix.show();
       }  
-      delay(100);
     }
+    delay(100);
     return players;
 }
 
