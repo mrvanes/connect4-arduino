@@ -614,8 +614,10 @@ void drawScore() {
   matrix.show();
 }
 
-void loop() {
+uint8_t playround = 1;
+bool playing = false;
 
+void loop() {
   uint8_t player_win = 0;
   uint8_t valid = 0;
   uint8_t col = 3;
@@ -631,24 +633,27 @@ void loop() {
   
   // start game loop
   while (1) {
-    col = last_col_p1;
+    if ((playround % 2) || playing) {
+      
+      // 1st player move
+      col = last_col_p1;
+      col = getMove(col, color_p1);
+      last_col_p1 = col;
 
-    // human player move
-    col = getMove(col, color_p1);
-    last_col_p1 = col;
-
-    if (! PlaceToken(col, 1, color_p1))
-      continue;
-    player_win = CheckforWin();
-    if (player_win > 0) {
-      if (++score_p1 > 4) {
-        score_p1 = 0;
-        score_p2 = 0;
-        RunWinnerAnimation(player_win);
+      if (! PlaceToken(col, 1, color_p1))
+        continue;
+      player_win = CheckforWin();
+      if (player_win > 0) {
+        if (++score_p1 > 4) {
+          score_p1 = 0;
+          score_p2 = 0;
+          RunWinnerAnimation(player_win);
+        }
+        break;
       }
-      break;
     }
-    // AI player move
+    
+    // AI or 2nd player move
     col = last_col_p2;
     do
       if (players == 1)
@@ -667,5 +672,8 @@ void loop() {
       }
       break;
     }
+    playing = true;
   }
+  playround++;
+  playing = false;
 }
