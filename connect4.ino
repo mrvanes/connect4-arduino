@@ -488,7 +488,9 @@ void setup() {
   attachInterrupt(digitalPinToInterrupt(rot1), doEncoder, RISING);
   
   pinMode(Button_drop, INPUT_PULLUP);
-  pinMode(13, OUTPUT);
+  attachInterrupt(digitalPinToInterrupt(Button_drop), doUp, RISING);
+  
+  //pinMode(13, OUTPUT);
 
   matrix.begin(); // start up the bi-colour LED matrix
   matrix.setBrightness(10);
@@ -500,21 +502,33 @@ void setup() {
 
 int valRotary = 0;
 int lastValRotary = 0;
-unsigned long Time;
+//unsigned long Time;
 unsigned long lastTime = 0;
+uint16_t filter = 0x8000-1;
+bool clicked = false;
 
 void doEncoder() {
   // Digitally debounce a bit
-  // Make sure there are 12 consecutive 1's on rot1
+  // Make sure there are 16 consecutive 1's on rot1
   // before reading the state of rot2
   uint16_t state = 0;
   do
-    state = ((state << 1) | digitalRead(rot1)) & 0x2000-1;
-  while (state != 0x2000-1);
+    state = ((state << 1) | digitalRead(rot1)) & filter;
+  while (state != filter);
   if (digitalRead(rot2)) 
     valRotary--;
   else
     valRotary++;
+
+}
+
+void doUp() {
+  // Debounce a bit on time
+  unsigned long Time = millis();
+  if (Time - lastTime > 500) {
+    clicked = false;
+    lastTime = Time;
+  }
 }
 
 uint8_t getMove(uint8_t col, uint16_t color) {
@@ -555,12 +569,13 @@ uint8_t getMove(uint8_t col, uint16_t color) {
         matrix.show();
       }
 
-      if (button_d == 0) {
+      if ((button_d == 0) && !clicked) {
+        clicked = true;
         break;
       }
-      delay(100);
+      //delay(100);
     }
-    
+
     matrix.drawPixel(7, col, 0);
     matrix.show();
     return col;
@@ -582,7 +597,8 @@ uint8_t getPlayers() {
     // Read players loop
     while(1) {
       button_d = digitalRead(Button_drop);
-      if (button_d == 0) {
+      if ((button_d == 0) && !clicked) {
+        clicked = true;
         break;
       }
       if(valRotary != lastValRotary) {
@@ -595,7 +611,7 @@ uint8_t getPlayers() {
         matrix.show();
       }  
     }
-    delay(100);
+    //delay(100);
     return players;
 }
 
